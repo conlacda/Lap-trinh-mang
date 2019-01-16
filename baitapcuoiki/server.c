@@ -54,6 +54,10 @@ char* getParameter1(char message[]);
 
 char* getParameter2(char message[]);
 
+void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]);
+
+void buyItemForDefending(int connfd, int item_number, int castle_number, char errorCode[]);
+
 
 int main(int argc, char *argv[])
 {
@@ -347,7 +351,7 @@ void processData(char in[], char out[])
 	}
 
 	// bui
-
+	if ()
 
 	strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
@@ -473,6 +477,7 @@ char* getCommandCode(char message[]) {
 
 	return commandCode;
 }
+
 // Get a string is data of command message after splitting received message
 // parameter: a string is received message
 // return a string which is data of command message
@@ -487,6 +492,7 @@ char* getParameter1(char message[]) {
 
 	return dataMessage;
 }
+
 char* getParameter2(char message[]) {
 	char temp[MAX_LEN];
 	char* dataMessage;
