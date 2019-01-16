@@ -14,11 +14,12 @@
 
 #define BACKLOG 20 /* Number of allowed connections */
 #define BUFF_SIZE 1024
+#define MAX_LEN 100
 
 typedef struct node
 {
-	char name[100];
-	char pass[100];
+	char name[MAX_LEN];
+	char pass[MAX_LEN];
 	int status;
 	int signin;
 	struct node *next;
@@ -26,7 +27,7 @@ typedef struct node
 userInfo *root, *cur, *new;
 
 int state = 0;
-char str[100]; // user_name is typed
+char str[MAX_LEN]; // user_name is typed
 
 /* The processData function copies the input string to output */
 void processData(char *in, char *out);
@@ -46,6 +47,13 @@ void saveInfo();
 userInfo *search(char str[]);
 
 int splitString(char recv[]);
+
+char* getCommandCode(char message[]);
+
+char* getParameter1(char message[]);
+
+char* getParameter2(char message[]);
+
 
 int main(int argc, char *argv[])
 {
@@ -200,8 +208,8 @@ int main(int argc, char *argv[])
 }
 
 // bui
-void buyWeaponForAttacking(int weapon_number, char errorCode[]) {
-    int i = getTeamNumber();
+void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]) {
+    int i = getTeamNumber(connfd);
 
     if (weapon_number == 0) {
         if (team[i].resources[0] < 200 || team[i].resources[2] < 1500) {
@@ -209,10 +217,109 @@ void buyWeaponForAttacking(int weapon_number, char errorCode[]) {
         }
 		else {
 			team[i].weapon = weapon_number;
+			team[i].resources[0] -= 200;
+			team[i].resources[2] -= 1500;
+			strcpy(errorCode, "240");
 		}
     }
+
+	else if (weapon_number == 1) {
+		if (team[i].resources[0] < 300 || team[i].resources[1] < 1500 || team[i].resources[2] < 400) {
+            strcpy(errorCode, "241");
+        }
+		else {
+			team[i].weapon = weapon_number;
+			team[i].resources[0] -= 300;
+			team[i].resources[1] -= 1500;
+			team[i].resources[2] -= 400;
+			strcpy(errorCode, "240");
+		}
+	}
+
+	else if (weapon_number == 2) {
+		if (team[i].resources[0] < 1800 || team[i].resources[1] < 2500 || team[i].resources[2] < 500) {
+            strcpy(errorCode, "241");
+        }
+		else {
+			team[i].weapon = weapon_number;
+			team[i].resources[0] -= 1800;
+			team[i].resources[1] -= 2500;
+			team[i].resources[2] -= 500;
+			strcpy(errorCode, "240");
+		}
+	}
+
+	else {									// khong tim thay weapon
+		strcpy(errorCode, "242");
+	}
 }
-//
+
+void buyItemForDefending(int connfd, int item_number, int castle_number, char errorCode[]) {
+    int i = getTeamNumber(connfd);
+
+	if (item_number > 4 || castle_number > 3) {				// khong tim thay item hoac lau dai
+		strcpy(errorCode, "313");
+	}
+	else {
+		if (team[i].owned_castle[castle_number] == 0) {		// khong so huu lau dai nay
+			strcpy(errorCode, "312");
+		}
+		else {
+			if (item_number == 0) {
+				if (team[i].resources[1] < 50 || team[i].resources[2] < 200) {
+					strcpy(errorCode, "311");
+				}
+				else {
+					team[i].item = item_number;
+					team[i].resources[1] -= 50;
+					team[i].resources[2] -= 200;
+					strcpy(errorCode, "310");
+				}
+   			}
+
+			else if (item_number == 1) {
+				if (team[i].resources[0] < 100 || team[i].resources[1] < 100 || team[i].resources[2] < 1000) {
+					strcpy(errorCode, "311");
+				}
+				else {
+					team[i].item = item_number;
+					team[i].resources[0] -= 100;
+					team[i].resources[1] -= 100;
+					team[i].resources[2] -= 1000;
+					strcpy(errorCode, "310");
+				}
+			}
+
+			else if (item_number == 2) {
+				if (team[i].resources[0] < 200 || team[i].resources[1] < 1000 || team[i].resources[2] < 200) {
+					strcpy(errorCode, "311");
+				}
+				else {
+					team[i].item = item_number;
+					team[i].resources[0] -= 200;
+					team[i].resources[1] -= 1000;
+					team[i].resources[2] -= 200;
+					strcpy(errorCode, "310");
+				}
+			}
+
+			else if (item_number == 3) {
+				if (team[i].resources[0] < 1000 || team[i].resources[1] < 2000 || team[i].resources[2] < 1000) {
+					strcpy(errorCode, "311");
+				}
+				else {
+					team[i].item = item_number;
+					team[i].resources[0] -= 1000;
+					team[i].resources[1] -= 2000;
+					team[i].resources[2] -= 1000;
+					strcpy(errorCode, "310");
+				}
+			}
+		}
+	}
+}
+// end bui
+
 
 // return code of statement is sent by client
 // INPUT : String from client  (in[])
@@ -238,6 +345,10 @@ void processData(char in[], char out[])
 		else
 			in[i] = '\0';
 	}
+
+	// bui
+
+
 	strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
 	
@@ -346,6 +457,49 @@ userInfo *search(char str[])
 	}
 	return NULL;
 }
+
+// bui
+
+// Get a string is command code after splitting received message
+// parameter: a string is received message
+// return a string which is command code
+char* getCommandCode(char message[]) {
+	char temp[MAX_LEN];
+	char* commandCode;
+
+	strcpy(temp, message);
+
+	commandCode = strtok(temp, " ");
+
+	return commandCode;
+}
+// Get a string is data of command message after splitting received message
+// parameter: a string is received message
+// return a string which is data of command message
+char* getParameter1(char message[]) {
+	char temp[MAX_LEN];
+	char* dataMessage;
+
+	strcpy(temp, message);
+
+	dataMessage = strtok(temp, " ");
+	dataMessage = strtok(NULL, " ");
+
+	return dataMessage;
+}
+char* getParameter2(char message[]) {
+	char temp[MAX_LEN];
+	char* dataMessage;
+
+	strcpy(temp, message);
+
+	dataMessage = strtok(temp, " ");
+	dataMessage = strtok(NULL, " ");
+        dataMessage = strtok(NULL, " ");
+
+	return dataMessage;
+}
+// end bui
 
 // get type of string from client and return value to in[]
 // INPUT : string
