@@ -1,18 +1,19 @@
-#include <stdio.h>          /* Login Logout in TCP */
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
 
-
-#define SERVER_ADDR "127.0.0.1"
-#define SERVER_PORT 5550
 #define BUFF_SIZE 1024
 
-int main(){
+int main(int argc, char *argv[]){
+	if (argc!= 3){
+		printf("Usage %s <ip> <port_number>\n",argv[0]);
+		return 1;		
+	}
 	int client_sock;
 	char buff[BUFF_SIZE + 1];
 	struct sockaddr_in server_addr; /* server's address information */
@@ -23,8 +24,8 @@ int main(){
 	
 	//Step 2: Specify server address
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(SERVER_PORT);
-	server_addr.sin_addr.s_addr = inet_addr(SERVER_ADDR);
+	server_addr.sin_port = htons(atoi(argv[2]));
+	server_addr.sin_addr.s_addr = inet_addr(argv[1]);
 	
 	//Step 3: Request to connect server
 	if(connect(client_sock, (struct sockaddr*)&server_addr, sizeof(struct sockaddr)) < 0){
@@ -33,13 +34,15 @@ int main(){
 	}
 		
 	//Step 4: Communicate with server			
-	
+	while(1){
+
 	//send message
 	printf("\nInsert string to send:");
 	memset(buff,'\0',(strlen(buff)+1));
 	fgets(buff, BUFF_SIZE, stdin);		
 	msg_len = strlen(buff);
-		
+	if (msg_len ==0) break;
+	if (!strcmp(buff,"\n")) break;	
 	bytes_sent = send(client_sock, buff, msg_len, 0);
 	if(bytes_sent < 0)
 		perror("\nError: ");
@@ -52,10 +55,10 @@ int main(){
 			printf("Connection closed.\n");
 		
 	buff[bytes_received] = '\0';
-	printf("Reply from server: %s", buff);
-	
-	
+    printf("%s\n",buff);	
+    }	 
 	//Step 4: Close socket
 	close(client_sock);
 	return 0;
 }
+// them writev() + readv()

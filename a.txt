@@ -1,0 +1,25 @@
+FD_SETSIZE : chỉ số mảng client   client[FD_SETSIZE]
+--> số kêt nối tối đa cho phép ( trong hệ thống)
+
+BACKLOG : số kết nối tối đa đến server
+FD_SET(int fd, fd_set *set);  Add fd to the set.
+
+FD_CLR(int fd, fd_set *set);  Remove fd from the set.
+
+FD_ISSET(int fd, fd_set *set);  Return true if fd is in the set.
+
+FD_ZERO(fd_set *set);  Clear all entries from the set.
+
+listenfd : 1 socket đã được khỏi tạo
+
+accept (socket , địa chỉ client , độ rộng địa chỉ của client)
+
+readfds : danh sách các fd sẵn sàng
+
+connfd : phân biệt 1 client với 2 lần kết nối
+
+maxi : số client đã kết nối
+
+ret : kích thước mảng gừi đi
+
+*** SOCKFD : chính là địa chỉ sock

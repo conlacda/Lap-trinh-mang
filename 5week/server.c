@@ -63,8 +63,8 @@ void getUserInfo(FILE *f) {
 int splitString(char recv[]){
     char head[100],cont[100];
     int i=0,j;
-    while (recv[strlen(recv)]==' ') recv[strlen(recv)] = '\0';
-    while (recv[i]==' ') i++;
+    while (recv[strlen(recv)]==' ') recv[strlen(recv)] = '\0'; //
+    while (recv[i]==' ') i++;//
     for (j=i;j<strlen(recv);j++){
         if (recv[j] == ' ') {
         	head[j-i]='\0';
@@ -174,6 +174,7 @@ int main(int argc, char *argv[])
 				printf("\nReceive: %s ", recv_data);
 			}
 			// Solve data and send response
+            // state = 2 da co nguoi dang nhap
             mark = splitString(recv_data);
             if (mark == 1) { // typed user "x"
                 if (state ==2) strcpy(recv_data,"14");
@@ -211,6 +212,7 @@ int main(int argc, char *argv[])
                             strcpy(recv_data,"21");
                             if (cur->status == 0) {
                             	strcpy(recv_data,"23");
+                                saveFile();
                             	state = 0; // logout or not sign in
                             }
                         }
@@ -233,6 +235,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 		}//end conversation
+        saveFile();
 		close(conn_sock);	
 	}
 	

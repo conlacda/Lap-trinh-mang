@@ -8,6 +8,8 @@
 #include <netdb.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <arpa/inet.h>
+
 
 #define PORT 5550
 #define BACKLOG 20
@@ -65,15 +67,15 @@ int main(){
 		}
 		
 		/* For each client, fork spawns a child, and the child handles the new client */
-		pid = fork();
+		// pid = fork();
 		
-		/* fork() is called in child process */
-		if(pid  == 0){
-			close(listen_sock);
-			printf("You got a connection from %s\n", inet_ntoa(client.sin_addr)); /* prints client's IP */
-			echo(conn_sock);					
-			exit(0);
-		}
+		// /* fork() is called in child process */
+		// if(pid  == 0){
+		// 	close(listen_sock);
+		// 	printf("You got a connection from %s\n", inet_ntoa(client.sin_addr)); /* prints client's IP */
+		// 	echo(conn_sock);					
+		// 	exit(0);
+		// }
 		
 		/* The parent closes the connected socket since the child handles the new client */
 		close(conn_sock);

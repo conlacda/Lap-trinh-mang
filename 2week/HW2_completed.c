@@ -42,7 +42,11 @@ void iptodomain(char *argv){
     struct in_addr ipv4addr;
         inet_pton(AF_INET,argv, &ipv4addr);
         host = gethostbyaddr(&ipv4addr, sizeof ipv4addr, AF_INET);
-        printf("Official name: %s\n", host->h_name);
+        // printf("Official name: %s\n", host->h_name);
+
+    char s[100];
+    strcpy(s,host->h_name);
+    printf("%s\n",s);
 }
 // print ip from domainname 
 void domaintoip(char *argv){ // input : domain name -> output : IPs of this domain 
