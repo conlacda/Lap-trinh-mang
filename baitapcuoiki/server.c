@@ -224,7 +224,7 @@ void processData(char in[], char out[])
 	}
 	strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
-	
+	// TODO xử lý phần SHOWQT trả về câu hỏi cho client + trạng thái của castle
 	
 }
 int splitString(char recv[])

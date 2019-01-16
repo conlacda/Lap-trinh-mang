@@ -94,10 +94,11 @@ int main(int argc, char *argv[])
             if (num==0 || num>9) printf("Unsiutable parameter (y/c : 1-9) 1->6 : resources & 7->9 : castles");
 			else {// display list of questions
 			    num--;
-				if (0<=num<=5) {} // chỗ này tổng quát phải là AMOUNT_OF_SMALL_QUESTION/AMOUNT_OF_QUESTION_A_RESOURCE  (+AMOUNT_OF_SMALL_QUESTION/3)
-				else if (6<=num<=9){
-                   // TODO nhận dữ liệu từ server cho trạng thái + câu hỏi 
-				   sendData(client_sock,buff,strlen(buff),0);
+				if (0<=num && num<=5) {} // chỗ này tổng quát phải là AMOUNT_OF_SMALL_QUESTION/AMOUNT_OF_QUESTION_A_RESOURCE  (+AMOUNT_OF_SMALL_QUESTION/3)
+				else if (6<=num && num<=8){
+                    // TODO nhận dữ liệu từ server cho trạng thái + câu hỏi 
+	    		    send(client_sock,buff,strlen(buff),0);
+				    printf("-%s-",buff);    
 				}
                 displayQuestion(num);
 			}
