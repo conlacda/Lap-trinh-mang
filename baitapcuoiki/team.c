@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define MAX_LEN 100;
+#define MAX_LEN 100
 
 #define AMOUNT_OF_TEAM 3
 #define AMOUNT_OF_CASTLE 3
@@ -136,12 +136,17 @@ void initTeam()
         team[i].owned_castle[1] = 0;    // chua chiem duoc lau dai so 2
         team[i].owned_castle[2] = 0;    // chua chiem duoc lau dai so 3
 
-        for (k = 0; k < 18; k++) {
+        for (int k = 0; k < 18; k++) {
             team[i].owned_resource[k] = 0;      // chua chiem duoc bai tai nguyen nao, neu chiem duoc thi gia tri bang 1
         }
 
-        team[i].passed_small_question = 0; // chua tra loi cau hoi nao
-        team[i].passed_big_question = 0;
+        for (int k = 0; k < 18; k++) {
+            team[i].passed_small_question[k] = 0;      // chua tra loi cau hoi nao
+        }
+
+        for (int k = 0; k < 18; k++) {
+            team[i].passed_big_question[k] = 0;      // chua tra loi cau hoi nao
+        }
     }
 }
 // chia đội cho 1 người kết nối tới

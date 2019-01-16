@@ -14,7 +14,7 @@ typedef struct quest{
 question small_question[18],big_question[3]; /* small_question : câu hỏi cho bãi khai thác 
                                                , big_question : câu hỏi cho lâu đài */
 char small_question_content[AMOUNT_OF_SMALL_QUESTION][100] ={
-    "con lợn có mấy chân 0 ? ", 
+    "con lợn có mấy chân 0 ?                       ", 
     "con gà có mấy mỏ 1?",
     "con lợn có mấy chân 2? ",
     "con gà có mấy mỏ 3?",
@@ -101,3 +101,26 @@ void sendQuestion(){ // gửi về cho máy khách
 void recvQuestion(){
 
 }// nhận lần lượt từng câu 1
+
+void displayQuestion(int x){ // x tu 0-5 chi ra do la bai khai thac , 6-8 chi ra do la lau dai
+    printf("%d",x);
+    int i;
+    if (0<=x && x<=5 ){ 
+        for (i=0;i<3;i++){
+            if (i==0) printf("Question for iron (key = %d)\n",3*x+i);
+            else if (i==1) printf("Question for stone (key = %d)\n",3*x+i);
+            else if (i==2) printf("Question for wood (key = %d)\n",3*x+i);
+                printf("Question : %s \n",small_question[3*x+i].content);
+                printf("Answer : \n ");
+                printf("a, %s\n",small_question[3*x+i].answer1);
+                printf("b, %s\n",small_question[3*x+i].answer2);
+                printf("c, %s\n",small_question[3*x+i].answer3);
+                printf("d, %s\n",small_question[3*x+i].answer4);
+        }
+    } else 
+    if (6<=x && x<=8)
+    {
+        printf("Answer of castle");
+        // TODO gửi lên server lấy trạng thái của lâu đài
+    } else printf("Answer not found");
+}
