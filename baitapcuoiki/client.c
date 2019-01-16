@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 		printf("Server if busy , please try later !!");
 	else
 	{
+		printf("Connect successfully");
 		char *token;
 		token = strtok(buff, "/");
 		int count_question = 0;
@@ -65,7 +66,7 @@ int main(int argc, char *argv[])
 			token = strtok(NULL, "/");
 			count_question++;
 		}
-
+		// small_question[i] --> lưu lại các câu hỏi của 6 bãi khai thác
 		// for (i=0;i<count_question;i++){ // show ra màn hình để kiểm tra câu hỏi gửi về có đúng ko?
 		// 	printf("%s\n",small_question[i].content);
 		// 	printf("%s\n",small_question[i].answer1);
@@ -87,44 +88,25 @@ int main(int argc, char *argv[])
 			break;
 		if (!strcmp(buff, "\n"))
 			break;
-		bytes_sent = send(client_sock, buff, msg_len, 0);
-		if (bytes_sent < 0)
-			perror("\nError: ");
+		if (1!=1){ // nếu tín hiệu ko gửi lên máy chủ
 
-		//receive echo reply
-		bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
-		if (bytes_received < 0)
-			perror("\nError: ");
-		else if (bytes_received == 0)
-			printf("Connection closed.\n");
+		}
+		else // tín hiệu được gửi lên máy chủ
+		{
+			bytes_sent = send(client_sock, buff, msg_len, 0);
+			if (bytes_sent < 0)
+				perror("\nError: ");
 
-		buff[bytes_received] = '\0';
-		if (!strcmp(buff, "40"))
-			printf("Not understand .\n Hint : Type 'user xxx' or 'pass xxx' or 'logout'\n");
-		else if (!strcmp(buff, "20"))
-			printf("Error state\n");
-		else if (!strcmp(buff, "10"))
-			printf("Account is blocked\n");
-		else if (!strcmp(buff, "11"))
-			printf("+OK\n");
-		else if (!strcmp(buff, "12"))
-			printf("User not found\n");
-		else if (!strcmp(buff, "13"))
-			printf("Account is signed\n");
-		else if (!strcmp(buff, "14"))
-			printf("Having a account is signed\n");
-		else if (!strcmp(buff, "21"))
-			printf("Pass not true\n");
-		else if (!strcmp(buff, "22"))
-			printf("Pass true . Account is signed\n");
-		else if (!strcmp(buff, "23"))
-			printf("Account is block because 3 times typed pass not true\n");
-		else if (!strcmp(buff, "30"))
-			printf("Logout success\n");
-		else if (!strcmp(buff, "31"))
-			printf("Logout fail . Not signed\n");
-		else
-			printf("%s\n", buff);
+			//receive echo reply
+			bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
+			if (bytes_received < 0)
+				perror("\nError: ");
+			else if (bytes_received == 0)
+				printf("Connection closed.\n");
+
+			buff[bytes_received] = '\0';
+		} 
+		// printf("%s",buff);
 	}
 	//Step 4: Close socket
 	close(client_sock);

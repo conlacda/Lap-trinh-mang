@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 			{
 				// printf("%d",connfd);  phân biêt 2 client với số connfd sinh ra
 				printf("You got a connection from %s with connfd= %d\n", inet_ntoa(cliaddr.sin_addr), connfd); /* prints client's IP */
-				if (splitTeam(connfd) != -1) // nếu ko xếp đc đội thì đóng kết nối đó
+				if (splitTeam(connfd) != -1)																   // nếu ko xếp đc đội thì đóng kết nối đó
 				{
 					state = 0;
 					for (i = 0; i < FD_SETSIZE; i++)
@@ -153,10 +153,11 @@ int main(int argc, char *argv[])
 
 					if (--nready <= 0)
 						continue; /* no more readable descriptors */
-				} 
-				else {
-					sendData(connfd,"400",4,0);
-					close (connfd);
+				}
+				else
+				{
+					sendData(connfd, "400", 4, 0);
+					close(connfd);
 				}
 			}
 		}
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
 // INPUT : String from client  (in[])
 // OUTPUT : Status/code for sending to client (out[])
 void processData(char in[], char out[])
-{			  //2
+{
 	int mark; // save type of string from client
 	int i;
 	// delete ' ' and '\n' in end of string rcvBuff from client
@@ -221,82 +222,14 @@ void processData(char in[], char out[])
 		else
 			in[i] = '\0';
 	}
-	// return code of statement is sent by client
-	mark = splitString(in);
-	if (mark == 0)
-	{
-		strcpy(in, "40");
-	}
-	else if (mark == 1)
-	{
-		strcpy(str, in);
-		if (state == 2)
-			strcpy(in, "14");
-		else
-		{ // state ==1 or 0 not signin
-			cur = search(in);
-			if (cur != NULL)
-			{
-				if (cur->status == 0)
-				{
-					strcpy(in, "10");
-					state = 0;
-				}
-				else
-				{
-					strcpy(in, "11");
-					state = 1;
-				}
-			}
-			else
-			{
-				strcpy(in, "12");
-				state = 0;
-			} // not found
-		}
-	}
-	else if (mark == 2)
-	{
-		if (state != 1)
-		{
-			strcpy(in, "20");
-		}
-		else
-		{ // waiting pass xxx
-			cur = search(str);
-			if (!strcmp(cur->pass, in))
-			{
-				cur->status = 3;
-				state = 2;
-				strcpy(in, "22");
-			}
-			else
-			{
-				cur->status--;
-				strcpy(in, "21");
-				if (cur->status == 0)
-				{
-					strcpy(in, "23");
-					saveInfo();
-					state = 0;
-				}
-			}
-		}
-	}
-	else if (mark == 3)
-	{
-		if (state != 2)
-			strcpy(in, "31");
-		else
-		{
-			strcpy(in, "30");
-		}
-		state = 0;
-	}
-	strcpy(out, in);
-	strcpy(in, "\0");
+	strcpy(out,in);
+	// tách xâu xem tín hiệu gửi về 
+	
 }
+int splitString(char recv[])
+{ //1
 
+}
 int receiveData(int s, char *buff, int size, int flags)
 {
 	int n;
@@ -401,48 +334,7 @@ userInfo *search(char str[])
 // get type of string from client and return value to in[]
 // INPUT : string
 // OUTPUT : type of string from client (login or logout or fail)
-int splitString(char recv[])
-{ //1
-	char head[100], cont[100];
-	int space_amount = 0, i, j;
-	for (i = 0; i < strlen(recv); i++)
-	{
-		if (recv[i] == ' ')
-			space_amount++;
-	}
-	if (space_amount > 1)
-		return 0;
-	if (space_amount == 0)
-		if (!strcmp(recv, "logout"))
-			return 3;
-		else
-			return 0;
-	// space_amount ==1;
-	strcpy(head, "");
-	strcpy(cont, "");
-	for (i = 0; i < strlen(recv); i++)
-	{
-		if (recv[i] != ' ')
-			head[i] = recv[i];
-		else
-		{
-			head[i] = '\0';
-			break;
-		}
-	}
-	for (j = i + 1; j < strlen(recv); j++)
-	{
-		cont[j - i - 1] = recv[j];
-	}
-	cont[j - i - 1] = '\0';
-	strcpy(recv, cont);
-	if (!strcmp(head, "user"))
-		return 1;
-	else if (!strcmp(head, "pass"))
-		return 2;
-	else
-		return 0;
-}
+
 /* luồng thực hiện 
 Nhận dữ liệu với recieveData 
 Xử lý với processData 
@@ -450,4 +342,9 @@ connfd : đánh dấu các client khác nhau
 các hàm getUserInfo , saveInfo ,.. để đọc dữ liệu vào cho hàm processData
 --> Ý tưởng : hàm gửi dữ liệu về client đã đánh dấu đc 2 client khác nhau
 nk state thì ko phân biệt đc 
+
+Xử lý thông điệp mà người dùng gửi lên 
+--> nếu là login , logout --> purpose =1
+           Cướp tài nguyên ( trả lời câu hỏi , công thành , trang bị)
+		   phòng thủ ( mua đồ)
 */

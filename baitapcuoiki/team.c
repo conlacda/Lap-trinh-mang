@@ -13,6 +13,7 @@ typedef struct tm{
     int passed_big_question[AMOUNT_OF_BIG_QUESTION];
     int owned_castle[3]; // 0 or 1  3 bãi
     int owned_resource[6];     
+    int weapon; // vũ khí
 }struct_team;
 struct_team team[AMOUNT_OF_TEAM]  ; // mặc định là có 3 team
 // tổng quát : phải khởi tạo đội -> bao nhiêu người sẽ tạo ra bằng ấy đội
