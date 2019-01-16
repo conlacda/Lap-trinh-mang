@@ -198,6 +198,22 @@ int main(int argc, char *argv[])
 	}
 	return 0;
 }
+
+// bui
+void buyWeaponForAttacking(int weapon_number, char errorCode[]) {
+    int i = getTeamNumber();
+
+    if (weapon_number == 0) {
+        if (team[i].resources[0] < 200 || team[i].resources[2] < 1500) {
+            strcpy(errorCode, "241");
+        }
+		else {
+			team[i].weapon = weapon_number;
+		}
+    }
+}
+//
+
 // return code of statement is sent by client
 // INPUT : String from client  (in[])
 // OUTPUT : Status/code for sending to client (out[])
