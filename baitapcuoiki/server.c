@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "question.c"
 #include "team.c"
+#include "solvestring.c"
 
 #define BACKLOG 20 /* Number of allowed connections */
 #define BUFF_SIZE 1024
@@ -47,12 +48,6 @@ void saveInfo();
 userInfo *search(char str[]);
 
 int splitString(char recv[]);
-
-char* getCommandCode(char message[]);
-
-char* getParameter1(char message[]);
-
-char* getParameter2(char message[]);
 
 void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]);
 
@@ -351,7 +346,6 @@ void processData(char in[], char out[])
 	}
 
 	// bui
-	if ()
 
 	strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
@@ -461,51 +455,6 @@ userInfo *search(char str[])
 	}
 	return NULL;
 }
-
-// bui
-
-// Get a string is command code after splitting received message
-// parameter: a string is received message
-// return a string which is command code
-char* getCommandCode(char message[]) {
-	char temp[MAX_LEN];
-	char* commandCode;
-
-	strcpy(temp, message);
-
-	commandCode = strtok(temp, " ");
-
-	return commandCode;
-}
-
-// Get a string is data of command message after splitting received message
-// parameter: a string is received message
-// return a string which is data of command message
-char* getParameter1(char message[]) {
-	char temp[MAX_LEN];
-	char* dataMessage;
-
-	strcpy(temp, message);
-
-	dataMessage = strtok(temp, " ");
-	dataMessage = strtok(NULL, " ");
-
-	return dataMessage;
-}
-
-char* getParameter2(char message[]) {
-	char temp[MAX_LEN];
-	char* dataMessage;
-
-	strcpy(temp, message);
-
-	dataMessage = strtok(temp, " ");
-	dataMessage = strtok(NULL, " ");
-        dataMessage = strtok(NULL, " ");
-
-	return dataMessage;
-}
-// end bui
 
 // get type of string from client and return value to in[]
 // INPUT : string
