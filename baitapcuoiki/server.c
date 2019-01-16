@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "question.c"
 #include "team.c"
+#include "solvestring.c"
 
 #define BACKLOG 20 /* Number of allowed connections */
 #define BUFF_SIZE 1024
@@ -179,7 +180,6 @@ int main(int argc, char *argv[])
 				else
 				{
 					// printf("%ld %d\n",strlen(rcvBuff),sockfd);
-
 					processData(rcvBuff, sendBuff);
 					sendData(sockfd, sendBuff, ret, 0);
 					// 0 : flag cờ báo  ret kích thước mảng
@@ -224,6 +224,7 @@ void processData(char in[], char out[])
 	}
 	strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
+	
 	
 }
 int splitString(char recv[])

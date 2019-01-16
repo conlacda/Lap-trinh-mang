@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include "question.c"
+#include "solvestring.c"
 
 #define BUFF_SIZE 1024
 
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
 		printf("Usage %s <ip> <port_number>\n", argv[0]);
 		return 1;
 	}
-	int client_sock;
+	int client_sock,i,num;
 	char buff[BUFF_SIZE + 1];
 	struct sockaddr_in server_addr; /* server's address information */
 	int msg_len, bytes_sent, bytes_received;
@@ -39,13 +40,13 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	// Step 4 : Receive the list of question for "bai khai thac"
-	int i;
+	
 	// Nhận danh sách câu hỏi ngay lần đầu kết nối tới
 	// thông điệp dạng a/b/c dính vào nhau
 	bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
 	buff[bytes_received] = '\0';
 	if (strcmp(buff, "400") == 0)
-		printf("Server if busy , please try later !!");
+		printf("Server is busy , please try later !!");
 	else
 	{
 		printf("Connect successfully");
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
 		}
 		// small_question[i] --> lưu lại các câu hỏi của 6 bãi khai thác
 		// for (i=0;i<count_question;i++){ // show ra màn hình để kiểm tra câu hỏi gửi về có đúng ko?
-		// 	printf("%s\n",small_question[i].content);
+		// 	printf("-%s-\n",small_question[i].content);
 		// 	printf("%s\n",small_question[i].answer1);
 		// 	printf("%s\n",small_question[i].answer2);
 		// 	printf("%s\n",small_question[i].answer3);
@@ -88,8 +89,18 @@ int main(int argc, char *argv[])
 			break;
 		if (!strcmp(buff, "\n"))
 			break;
-		if (1!=1){ // nếu tín hiệu ko gửi lên máy chủ
-
+		if (strcmp(getCommandCode(buff),"SHOWQT") == 0){ // nếu tín hiệu ko gửi lên máy chủ
+            num = atoi(getParameter1(buff)); // SHOWANS x : get question  thể hiện đây là bãi số mấy
+            if (num==0 || num>9) printf("Unsiutable parameter (y/c : 1-9) 1->6 : resources & 7->9 : castles");
+			else {// display list of questions
+			    num--;
+				if (0<=num<=5) {} // chỗ này tổng quát phải là AMOUNT_OF_SMALL_QUESTION/AMOUNT_OF_QUESTION_A_RESOURCE  (+AMOUNT_OF_SMALL_QUESTION/3)
+				else if (6<=num<=9){
+                   // TODO nhận dữ liệu từ server cho trạng thái + câu hỏi 
+				   sendData(client_sock,buff,strlen(buff),0);
+				}
+                displayQuestion(num);
+			}
 		}
 		else // tín hiệu được gửi lên máy chủ
 		{
@@ -105,6 +116,7 @@ int main(int argc, char *argv[])
 				printf("Connection closed.\n");
 
 			buff[bytes_received] = '\0';
+			// printf("%s",buff);
 		} 
 		// printf("%s",buff);
 	}
@@ -112,3 +124,4 @@ int main(int argc, char *argv[])
 	close(client_sock);
 	return 0;
 }
+// strstr() trả về xâu a trong xâu b

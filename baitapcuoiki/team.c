@@ -8,7 +8,7 @@
 typedef struct tm{
     int team_number;
     int socket_addr[AMOUNT_OF_PEOPLE_A_TEAM]; // lưu tất cả địa chỉ của người vào 1 team
-    int resources[4]; // wood , stone , iron , gold
+    int resources[4]; // iron , stone , wood , gold
     int passed_small_question[AMOUNT_OF_SMALL_QUESTION];
     int passed_big_question[AMOUNT_OF_BIG_QUESTION];
     int owned_castle[3]; // 0 or 1  3 bãi
