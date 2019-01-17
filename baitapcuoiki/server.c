@@ -348,24 +348,31 @@ void attackCastle(int i, int castle_number, char errorCode[]) {
 }
 
 void getTeamInfo(int i, char team_info[]) {
+	char temp[MAX_LEN] = "";
 	strcat(team_info, "Resource: \n");
 	strcat(team_info, "Iron: ");
-	strcat(team_info, itoa(team[i].resources[0]));
+	sprintf(temp, "%d", team[i].resources[0]);
+	strcat(team_info, temp);
 	strcat(team_info, "\nStone: ");
-	strcat(team_info, itoa(team[i].resources[1]));
+	sprintf(temp, "%d", team[i].resources[1]);
+	strcat(team_info, temp);
 	strcat(team_info, "\nWood: ");
-	strcat(team_info, itoa(team[i].resources[2]));
+	sprintf(temp, "%d", team[i].resources[2]);
+	strcat(team_info, temp);
 	strcat(team_info, "\nGold: ");
-	strcat(team_info, itoa(team[i].resources[3]));
+	sprintf(temp, "%d", team[i].resources[3]);
+	strcat(team_info, temp);
 	strcat(team_info, "\nCastle status (0 - not holding, 1 - holding): ");
 	for (int j = 0; j < 3; j++) {
-		strcat(team_info, itoa(team[i].owned_castle[j]));
+		sprintf(temp, "%d", team[i].owned_castle[j]);
+		strcat(team_info, temp);
 		strcat(team_info, "/");
 	}
 }
 
 void getCastleInfo(char castle_info[]) {
 	int j, k;
+	char temp[MAX_LEN] = "";
 	for (j = 0; j < 3; j++) {
 		int check = 0;
 		strcat(castle_info, "Castle 0: \n");
@@ -380,11 +387,13 @@ void getCastleInfo(char castle_info[]) {
 		}
 		else {
 			strcat(castle_info, "Team is holding: ");
-			strcat(castle_info, itoa(k));
+			sprintf(temp, "%d", k);
+			strcat(castle_info, temp);
 			strcat(castle_info, "\nItem is defending: ");
-			strcat(castle_info, array_item[team[k].item].item_name));
+			strcat(castle_info, array_item[team[k].item].item_name);
 			strcat(castle_info, "\nDefending strong: ");
-			strcat(castle_info, itoa(array_item[team[k].item].item_strong));
+			sprintf(temp, "%d", array_item[team[k].item].item_strong);
+			strcat(castle_info, temp);
 			strcat(castle_info, "\n");
 		}
 	}
