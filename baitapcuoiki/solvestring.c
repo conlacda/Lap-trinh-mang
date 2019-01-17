@@ -35,7 +35,7 @@ char* getParameter2(char message[]) {
 
 	dataMessage = strtok(temp, " ");
 	dataMessage = strtok(NULL, " ");
-        dataMessage = strtok(NULL, " ");
+    dataMessage = strtok(NULL, " ");
 
 	return dataMessage;
 }

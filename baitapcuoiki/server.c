@@ -31,7 +31,7 @@ int state = 0;
 char str[MAX_LEN]; // user_name is typed
 
 /* The processData function copies the input string to output */
-void processData(char *in, char *out);
+void processData(int sockfd ,char *in, char *out, char errorCode[]);
 
 /* The recv() wrapper function*/
 int receiveData(int s, char *buff, int size, int flags);
@@ -53,6 +53,11 @@ void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]);
 
 void buyItemForDefending(int connfd, int item_number, int castle_number, char errorCode[]);
 
+void attackCastle(int i, int castle_number, char errorCode[]);
+
+void getTeamInfo(int i, char team_info[]);
+
+void getCastleInfo(char castle_info[]);
 
 int main(int argc, char *argv[])
 {
@@ -61,8 +66,9 @@ int main(int argc, char *argv[])
 		printf("Usage %s <port_number>\n", argv[0]);
 		return 1;
 	}
-	int i, maxi, maxfd, listenfd, connfd, sockfd;
+	int i, maxi, maxfd, listenfd, connfd, sockfd,j;
 	int nready, client[FD_SETSIZE];
+    char errorCode[MAX_LEN] = "";
 	ssize_t ret;
 	fd_set readfds, allset;
 	char sendBuff[BUFF_SIZE], rcvBuff[BUFF_SIZE];
@@ -187,8 +193,10 @@ int main(int argc, char *argv[])
 				{
 					// printf("%ld %d\n",strlen(rcvBuff),sockfd);
 
-					processData(rcvBuff, sendBuff);
-					sendData(sockfd, sendBuff, ret, 0);
+					processData(sockfd,rcvBuff, sendBuff, errorCode);
+					if (!strcmp(sendBuff,"220") || !strcmp(sendBuff,"221") || !strcmp(sendBuff,"222") || !strcmp(sendBuff,"223") )
+					    sendData(sockfd, sendBuff, strlen(sendBuff), 0);
+					else sendData(sockfd,errorCode,strlen(errorCode),0);
 					// 0 : flag cờ báo  ret kích thước mảng
 					if (ret <= 0)
 					{ // bao loi
@@ -206,7 +214,6 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-// bui
 void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]) {
     int i = getTeamNumber(connfd);
 
@@ -253,7 +260,7 @@ void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]) {
 	}
 }
 
-void buyItemForDefending(int connfd, int item_number, int castle_number, char errorCode[]) {
+void buyItemForDefending(int connfd, int castle_number, int item_number, char errorCode[]) {
     int i = getTeamNumber(connfd);
 
 	if (item_number > 4 || castle_number > 3) {				// khong tim thay item hoac lau dai
@@ -317,16 +324,86 @@ void buyItemForDefending(int connfd, int item_number, int castle_number, char er
 		}
 	}
 }
-// end bui
 
+void attackCastle(int i, int castle_number, char errorCode[]) {
+	int defend_strong, k;
+
+	for (k = 0; k < AMOUNT_OF_TEAM; k++) {
+		if (team[k].owned_castle[castle_number] == 1) {
+			defend_strong = array_item[team[k].item].item_strong;
+			break;
+		}
+	}
+	if (array_weapon[team[i].weapon].weapon_strong >= defend_strong) {
+		strcpy(errorCode, "230");
+		team[k].owned_castle[castle_number] = 0;
+		team[i].owned_castle[castle_number] = 1;
+	}
+	else {
+		strcpy(errorCode, "231");
+	}
+}
+
+void getTeamInfo(int i, char team_info[]) {
+	char temp[MAX_LEN] = "";
+	strcat(team_info, "Resource: \n");
+	strcat(team_info, "Iron: ");
+	sprintf(temp, "%d", team[i].resources[0]);
+	strcat(team_info, temp);
+	strcat(team_info, "\nStone: ");
+	sprintf(temp, "%d", team[i].resources[1]);
+	strcat(team_info, temp);
+	strcat(team_info, "\nWood: ");
+	sprintf(temp, "%d", team[i].resources[2]);
+	strcat(team_info, temp);
+	strcat(team_info, "\nGold: ");
+	sprintf(temp, "%d", team[i].resources[3]);
+	strcat(team_info, temp);
+	strcat(team_info, "\nCastle status (0 - not holding, 1 - holding): ");
+	for (int j = 0; j < 3; j++) {
+		sprintf(temp, "%d", team[i].owned_castle[j]);
+		strcat(team_info, temp);
+		strcat(team_info, "/");
+	}
+}
+
+void getCastleInfo(char castle_info[]) {
+	int j, k;
+	char temp[MAX_LEN] = "";
+	for (j = 0; j < 3; j++) {
+		int check = 0;
+		strcat(castle_info, "Castle 0: \n");
+		for (k = 0; k < AMOUNT_OF_TEAM; k++) {
+			if (team[k].owned_castle[j] == 1) {
+				check = 1;
+				break;
+			}
+		}
+		if (check == 0) {
+			strcat(castle_info, "No team is holding!\n");
+		}
+		else {
+			strcat(castle_info, "Team is holding: ");
+			sprintf(temp, "%d", k);
+			strcat(castle_info, temp);
+			strcat(castle_info, "\nItem is defending: ");
+			strcat(castle_info, array_item[team[k].item].item_name);
+			strcat(castle_info, "\nDefending strong: ");
+			sprintf(temp, "%d", array_item[team[k].item].item_strong);
+			strcat(castle_info, temp);
+			strcat(castle_info, "\n");
+		}
+	}
+}
 
 // return code of statement is sent by client
 // INPUT : String from client  (in[])
 // OUTPUT : Status/code for sending to client (out[])
-void processData(char in[], char out[])
-{
+void processData(int sockfd,char in[], char out[],char errorCode[])
+{  
 	int mark; // save type of string from client
-	int i;
+	int i,j;
+	char param1[100],param2[100];
 	// delete ' ' and '\n' in end of string rcvBuff from client
 	for (i = 0; i <= strlen(in); i++)
 	{
@@ -344,10 +421,112 @@ void processData(char in[], char out[])
 		else
 			in[i] = '\0';
 	}
+	char commandCode[MAX_LEN];
+	strcpy(commandCode, getCommandCode(in));
 
-	// bui
+	i = getTeamNumber(sockfd);
+	//TODO
+	// xử lý 3 tham số của thông điệp gửi toi
+	if (strcmp(commandCode, "BUYATT") == 0) {
+		buyWeaponForAttacking(sockfd, atoi(getParameter1(in)), errorCode);
+	} 
 
-	strcpy(out,in);
+	else if (strcmp(commandCode, "BUYDEF") == 0) {
+		buyItemForDefending(sockfd, atoi(getParameter1(in)), atoi(getParameter2(in)), errorCode);
+	}
+
+	else if (strcmp(commandCode, "ATTACK") == 0) {
+		int castle_number = atoi(getParameter1(in));
+
+		if (castle_number > 2) {
+			strcpy(errorCode, "233");
+		}
+
+		else if (team[i].owned_castle[castle_number] == 1) {
+			strcpy(errorCode, "232");
+		}
+
+		else {
+			int check = 0;
+			for (int k = 0; k < AMOUNT_OF_TEAM; k++) {
+				if (team[k].owned_castle[castle_number] == 1) {
+					check = 1;
+					break;
+				}
+			}
+
+			if (check == 0) {
+				strcpy(errorCode, "234");
+			}
+			else {
+				attackCastle(i, castle_number, errorCode);
+			}
+		}
+	}
+
+	else if (strcmp(commandCode, "GET") == 0) {
+		if (atoi(getParameter1(in)) == 1) {
+			char team_info[10*MAX_LEN] = "";
+			getTeamInfo(i, team_info);
+			strcpy(out, team_info);
+			strcpy(errorCode, "210");
+		}
+		
+		else if (atoi(getParameter1(in)) == 2) {
+			char castle_info[10*MAX_LEN] = "";
+			getCastleInfo(castle_info);
+			strcpy(out, castle_info);
+			strcpy(errorCode, "210");
+		}
+		
+	} else
+    if (strcmp(getCommandCode(in),"SHOWQT") == 0){
+        i = atoi(getParameter1(in))-7;
+		if (0>i || i>2) strcpy(out,"223");
+		else {
+			// ghép câu hỏi lại để gửi qua client
+			// strcpy(out,"");
+			char temp[100];
+			strcpy(temp,""); 
+		    
+			strcpy(out,strcat(big_question[i].content,"/"));
+	        strcpy(temp,strcat(big_question[i].answer1,"/"));		
+			strcpy(out,strcat(out,temp));
+			strcpy(temp,strcat(big_question[i].answer2,"/"));
+			strcpy(out,strcat(out,temp));
+			strcpy(temp,strcat(big_question[i].answer3,"/"));
+			strcpy(out,strcat(out,temp));
+			for (j=strlen(out);j>0;j--){
+				if (out[j]!='/') out[j]='\0'; else break;
+			}
+			strcpy(temp,strcat(big_question[i].answer4,"/"));
+			strcpy(out,strcat(out,temp));
+		}
+	}
+	else
+	if (strcmp(getCommandCode(in),"ANSRESOURCE")==0){ // sovle answer question for resouces
+        strcpy(param1,getParameter1(in));
+		strcpy(param2,getParameter2(in));
+		if (!strcmp(param2,"")) strcpy(out,"221") ;else { 
+		    i = atoi(param1);
+    		strcpy(out,param2);
+	    	if (strlen(param2)>1) strcpy(out,"221"); else
+	    	if (team[getTeamNumber(sockfd)].owned_resource[i]==1) strcpy(out,"222");
+	    	else
+	    	{
+                if (strcmp(param2,"a")==0) j=1; 
+	    		if (strcmp(param2,"b")==0) j=2; 
+	    		if (strcmp(param2,"c")==0) j=3; 
+		    	if (strcmp(param2,"d")==0) j=4; 
+			    if (small_question_true_answer[i] == j) {
+			    	strcpy(out,"220");
+			    	team[getTeamNumber(sockfd)].owned_resource[i] = 1; // team x có người sockfd sở hữu bãi i 
+		    	} else strcpy(out,"221");
+		    }
+		}	
+	}
+	// if (strcmp(getCommandCode(in),"ANSCASTLE") == 0)
+	  else strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
 	
 }

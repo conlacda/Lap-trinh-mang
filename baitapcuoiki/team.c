@@ -95,8 +95,6 @@ void initWeaponItem()
     array_item[0].gold = 0;
 }
 
-// end bui
-
 typedef struct tm
 {
     int team_number;
@@ -123,10 +121,10 @@ void initTeam()
             team[i].socket_addr[j] = 0;
         }
         
-        team[i].resources[0] = 0;       // chua co iron
-        team[i].resources[1] = 0;       // chua co stone
-        team[i].resources[2] = 0;       // chua co wood
-        team[i].resources[3] = 0;       // chua co gold
+        team[i].resources[0] = 10000;       // chua co iron
+        team[i].resources[1] = 10000;       // chua co stone
+        team[i].resources[2] = 10000;       // chua co wood
+        team[i].resources[3] = 10000;       // chua co gold
 
         team[i].item = -1;              // chua co item nao
         team[i].weapon = -1;            // chua co weapon nao

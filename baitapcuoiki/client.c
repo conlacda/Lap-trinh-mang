@@ -136,7 +136,10 @@ int main(int argc, char *argv[])
 			else if (!strcmp(buff,"221")) printf("Answer is false"); 
 			else if (!strcmp(buff,"223")) printf("Question not found");
 			else if (!strcmp(buff,"222")) printf("You owned this castle");
-			else printf("%s",buff);
+			else if (!strcmp(buff,"241")) printf("Not enough resource");
+			else if (!strcmp(buff,"240")) printf("Buy weapon successfully"); 
+			else if (!strcmp(buff,"242")) printf("Weapon is not fount");
+			printf("%s",buff);
 		}
 		// printf("%s",buff);
 	}
