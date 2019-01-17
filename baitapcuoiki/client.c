@@ -20,8 +20,9 @@ int main(int argc, char *argv[])
 		printf("Usage %s <ip> <port_number>\n", argv[0]);
 		return 1;
 	}
-	int client_sock,i,num;
+	int client_sock, i, num;
 	char buff[BUFF_SIZE + 1];
+	char *token;
 	struct sockaddr_in server_addr; /* server's address information */
 	int msg_len, bytes_sent, bytes_received;
 
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 	// Step 4 : Receive the list of question for "bai khai thac"
-	
+
 	// Nhận danh sách câu hỏi ngay lần đầu kết nối tới
 	// thông điệp dạng a/b/c dính vào nhau
 	bytes_received = recv(client_sock, buff, BUFF_SIZE, 0);
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
 	else
 	{
 		printf("Connect successfully");
-		char *token;
+
 		token = strtok(buff, "/");
 		int count_question = 0;
 		while (token != NULL)
@@ -67,14 +68,6 @@ int main(int argc, char *argv[])
 			token = strtok(NULL, "/");
 			count_question++;
 		}
-		// small_question[i] --> lưu lại các câu hỏi của 6 bãi khai thác
-		// for (i=0;i<count_question;i++){ // show ra màn hình để kiểm tra câu hỏi gửi về có đúng ko?
-		// 	printf("-%s-\n",small_question[i].content);
-		// 	printf("%s\n",small_question[i].answer1);
-		// 	printf("%s\n",small_question[i].answer2);
-		// 	printf("%s\n",small_question[i].answer3);
-		// 	printf("%s\n",small_question[i].answer4);
-		// }
 	}
 	//Step 5: Communicate with server
 
@@ -89,21 +82,43 @@ int main(int argc, char *argv[])
 			break;
 		if (!strcmp(buff, "\n"))
 			break;
-		if (strcmp(getCommandCode(buff),"SHOWQT") == 0){ // nếu tín hiệu ko gửi lên máy chủ
-            num = atoi(getParameter1(buff)); // SHOWANS x : get question  thể hiện đây là bãi số mấy
-            if (num==0 || num>9) printf("Unsiutable parameter (y/c : 1-9) 1->6 : resources & 7->9 : castles");
-			else {// display list of questions
-			    num--;
-				if (0<=num && num<=5) {} // chỗ này tổng quát phải là AMOUNT_OF_SMALL_QUESTION/AMOUNT_OF_QUESTION_A_RESOURCE  (+AMOUNT_OF_SMALL_QUESTION/3)
-				else if (6<=num && num<=8){
-                    // TODO nhận dữ liệu từ server cho trạng thái + câu hỏi 
-	    		    send(client_sock,buff,strlen(buff),0);
-				    printf("-%s-",buff);    
+		if (strcmp(getCommandCode(buff), "SHOWQT") == 0)
+		{									 // nếu tín hiệu ko gửi lên máy chủ
+			num = atoi(getParameter1(buff)); // SHOWANS x : get question  thể hiện đây là bãi số mấy
+			if (num == 0 || num > 9)
+				printf("Unsiutable parameter (y/c : 1-9) 1->6 : resources & 7->9 : castles");
+			else
+			{ // display list of questions
+				num--;
+				if (0 <= num && num <= 5)
+				{ // chỗ này tổng quát phải là AMOUNT_OF_SMALL_QUESTION/AMOUNT_OF_QUESTION_A_RESOURCE  (+AMOUNT_OF_SMALL_QUESTION/3)
+					displayQuestion(num);
 				}
-                displayQuestion(num);
+				else if (6 <= num && num <= 8)
+				{
+					send(client_sock, buff, strlen(buff), 0);
+					recv(client_sock, buff, BUFF_SIZE, 0);
+					if (strcmp(buff, "223") == 0)
+						printf("Error ! Question is not found");
+					else
+					{
+						token = strtok(buff, "/");
+						strcpy(big_question[num - 6].content, token);
+						token = strtok(NULL, "/"); // đối số là NULL : quy định sẽ chuyển tới token kế tiếp chứ ko phải coi NULL là xâu như BUFF
+						strcpy(big_question[num - 6].answer1, token);
+						// printf("%s",token);
+						token = strtok(NULL, "/");
+						strcpy(big_question[num - 6].answer2, token);
+						token = strtok(NULL, "/");
+						strcpy(big_question[num - 6].answer3, token);
+						token = strtok(NULL, "/");
+						strcpy(big_question[num - 6].answer4, token);
+						displayQuestion(num);
+					}
+				}
 			}
 		}
-		else // tín hiệu được gửi lên máy chủ
+		else // ko phải thông điệp lấy câu hỏi --> chỉ trả về opcode
 		{
 			bytes_sent = send(client_sock, buff, msg_len, 0);
 			if (bytes_sent < 0)
@@ -117,8 +132,12 @@ int main(int argc, char *argv[])
 				printf("Connection closed.\n");
 
 			buff[bytes_received] = '\0';
-			// printf("%s",buff);
-		} 
+			if (!strcmp(buff,"220")) printf("Answer is true . Get resource of this castle");
+			else if (!strcmp(buff,"221")) printf("Answer is false"); 
+			else if (!strcmp(buff,"223")) printf("Question not found");
+			else if (!strcmp(buff,"222")) printf("You owned this castle");
+			else printf("%s",buff);
+		}
 		// printf("%s",buff);
 	}
 	//Step 4: Close socket

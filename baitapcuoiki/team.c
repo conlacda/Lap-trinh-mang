@@ -9,7 +9,6 @@
 #define AMOUNT_OF_WEAPON 3
 #define AMOUNT_OF_ITEM 4
 
-// bui
 typedef struct struct_weapon
 {
     int weapon_number;
