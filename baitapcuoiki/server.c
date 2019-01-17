@@ -15,7 +15,6 @@
 
 #define BACKLOG 20 /* Number of allowed connections */
 #define BUFF_SIZE 1024
-#define MAX_LEN 100
 
 typedef struct node
 {
@@ -31,7 +30,7 @@ int state = 0;
 char str[MAX_LEN]; // user_name is typed
 
 /* The processData function copies the input string to output */
-void processData(char *in, char *out);
+void processData(int connfd, char *in, char *out, char errorCode[]);
 
 /* The recv() wrapper function*/
 int receiveData(int s, char *buff, int size, int flags);
@@ -51,7 +50,13 @@ int splitString(char recv[]);
 
 void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]);
 
-void buyItemForDefending(int connfd, int item_number, int castle_number, char errorCode[]);
+void buyItemForDefending(int connfd, int castle_number, int item_number, char errorCode[]);
+
+void attackCastle(int i, int castle_number, char errorCode[]);
+
+void getTeamInfo(int i, char team_info[]);
+
+void getCastleInfo(char castle_info[]);
 
 
 int main(int argc, char *argv[])
@@ -68,6 +73,8 @@ int main(int argc, char *argv[])
 	char sendBuff[BUFF_SIZE], rcvBuff[BUFF_SIZE];
 	socklen_t clilen;
 	struct sockaddr_in cliaddr, servaddr;
+
+	char errorCode[MAX_LEN] = "";
 
 	//Step 1: Construct a TCP socket to listen connection request
 	if ((listenfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
@@ -107,6 +114,8 @@ int main(int argc, char *argv[])
 	getUserInfo(f);
 	loadQuestion();
 	initTeam();
+	initWeaponItem();
+
 	//Step 4: Communicate with clients
 	while (1)
 	{
@@ -187,7 +196,8 @@ int main(int argc, char *argv[])
 				{
 					// printf("%ld %d\n",strlen(rcvBuff),sockfd);
 
-					processData(rcvBuff, sendBuff);
+					processData(connfd, rcvBuff, sendBuff, errorCode);
+
 					sendData(sockfd, sendBuff, ret, 0);
 					// 0 : flag cờ báo  ret kích thước mảng
 					if (ret <= 0)
@@ -253,7 +263,7 @@ void buyWeaponForAttacking(int connfd, int weapon_number, char errorCode[]) {
 	}
 }
 
-void buyItemForDefending(int connfd, int item_number, int castle_number, char errorCode[]) {
+void buyItemForDefending(int connfd, int castle_number, int item_number, char errorCode[]) {
     int i = getTeamNumber(connfd);
 
 	if (item_number > 4 || castle_number > 3) {				// khong tim thay item hoac lau dai
@@ -317,13 +327,76 @@ void buyItemForDefending(int connfd, int item_number, int castle_number, char er
 		}
 	}
 }
+
+void attackCastle(int i, int castle_number, char errorCode[]) {
+	int defend_strong, k;
+
+	for (k = 0; k < AMOUNT_OF_TEAM; k++) {
+		if (team[k].owned_castle[castle_number] == 1) {
+			defend_strong = array_item[team[k].item].item_strong;
+			break;
+		}
+	}
+	if (array_weapon[team[i].weapon].weapon_strong >= defend_strong) {
+		strcpy(errorCode, "230");
+		team[k].owned_castle[castle_number] = 0;
+		team[i].owned_castle[castle_number] = 1;
+	}
+	else {
+		strcpy(errorCode, "231");
+	}
+}
+
+void getTeamInfo(int i, char team_info[]) {
+	strcat(team_info, "Resource: \n");
+	strcat(team_info, "Iron: ");
+	strcat(team_info, itoa(team[i].resources[0]));
+	strcat(team_info, "\nStone: ");
+	strcat(team_info, itoa(team[i].resources[1]));
+	strcat(team_info, "\nWood: ");
+	strcat(team_info, itoa(team[i].resources[2]));
+	strcat(team_info, "\nGold: ");
+	strcat(team_info, itoa(team[i].resources[3]));
+	strcat(team_info, "\nCastle status (0 - not holding, 1 - holding): ");
+	for (int j = 0; j < 3; j++) {
+		strcat(team_info, itoa(team[i].owned_castle[j]));
+		strcat(team_info, "/");
+	}
+}
+
+void getCastleInfo(char castle_info[]) {
+	int j, k;
+	for (j = 0; j < 3; j++) {
+		int check = 0;
+		strcat(castle_info, "Castle 0: \n");
+		for (k = 0; k < AMOUNT_OF_TEAM; k++) {
+			if (team[k].owned_castle[j] == 1) {
+				check = 1;
+				break;
+			}
+		}
+		if (check == 0) {
+			strcat(castle_info, "No team is holding!\n");
+		}
+		else {
+			strcat(castle_info, "Team is holding: ");
+			strcat(castle_info, itoa(k));
+			strcat(castle_info, "\nItem is defending: ");
+			strcat(castle_info, array_item[team[k].item].item_name));
+			strcat(castle_info, "\nDefending strong: ");
+			strcat(castle_info, itoa(array_item[team[k].item].item_strong));
+			strcat(castle_info, "\n");
+		}
+	}
+}
+
 // end bui
 
 
 // return code of statement is sent by client
 // INPUT : String from client  (in[])
 // OUTPUT : Status/code for sending to client (out[])
-void processData(char in[], char out[])
+void processData(int connfd, char in[], char out[], char errorCode[])
 {
 	int mark; // save type of string from client
 	int i;
@@ -346,8 +419,68 @@ void processData(char in[], char out[])
 	}
 
 	// bui
+	char commandCode[MAX_LEN];
+	strcpy(commandCode, getCommandCode(in));
 
-	strcpy(out,in);
+	i = getTeamNumber(connfd);
+
+	if (strcmp(commandCode, "BUYATT") == 0) {
+		buyWeaponForAttacking(connfd, atoi(getParameter1(in)), errorCode);
+	} 
+
+	else if (strcmp(commandCode, "BUYDEF") == 0) {
+		buyItemForDefending(connfd, atoi(getParameter1(in)), atoi(getParameter2(in)), errorCode);
+	}
+
+	else if (strcmp(commandCode, "ATTACK") == 0) {
+		int castle_number = atoi(getParameter1(in));
+
+		if (castle_number > 2) {
+			strcpy(errorCode, "233");
+		}
+
+		else if (team[i].owned_castle[castle_number] == 1) {
+			strcpy(errorCode, "232");
+		}
+
+		else {
+			int check = 0;
+			for (int k = 0; k < AMOUNT_OF_TEAM; k++) {
+				if (team[k].owned_castle[castle_number] == 1) {
+					check = 1;
+					break;
+				}
+			}
+
+			if (check == 0) {
+				strcpy(errorCode, "234");
+			}
+			else {
+				attackCastle(i, castle_number, errorCode);
+			}
+		}
+	}
+
+	else if (strcmp(commandCode, "GET") == 0) {
+		if (atoi(getParameter1(in)) == 1) {
+			char team_info[10*MAX_LEN] = "";
+			getTeamInfo(i, team_info);
+			strcpy(out, team_info);
+			strcpy(errorCode, "210");
+		}
+		
+		else if (atoi(getParameter1(in)) == 2) {
+			char castle_info[10*MAX_LEN] = "";
+			getCastleInfo(castle_info);
+			strcpy(out, castle_info);
+			strcpy(errorCode, "210");
+		}
+		
+	}
+
+	// end bui
+
+	//strcpy(out,in);
 	// tách xâu xem tín hiệu gửi về 
 	
 }
