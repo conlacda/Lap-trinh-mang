@@ -5,7 +5,7 @@
 #define AMOUNT_OF_TEAM 3
 #define AMOUNT_OF_CASTLE 3
 #define AMOUNT_OF_RESOURCE 6
-#define AMOUNT_OF_PEOPLE_A_TEAM 3
+#define AMOUNT_OF_PEOPLE_A_TEAM 1 // chế độ chơi lẻ 1 người ( n người chơi 1 đội)
 #define AMOUNT_OF_WEAPON 3
 #define AMOUNT_OF_ITEM 4
 
@@ -148,21 +148,28 @@ void initTeam()
 }
 // chia đội cho 1 người kết nối tới
 int splitTeam(int connfdf)
-{
-    int i = 0, j = 0, flag = 0; // flag : đánh dấu có tìm được team hay ko ?
-    for (i = 0; i < AMOUNT_OF_TEAM; i++)
-    {
-        for (j = 0; j < AMOUNT_OF_PEOPLE_A_TEAM; j++)
-        {
-            if (team[i].socket_addr[j] == 0)
-            { // nếu trong team có địa chỉ vẫn là 0 thì là còn chỗ trống
-                flag = 1;
-                team[i].socket_addr[j] = connfdf; // chia đội cho địa chỉ connfd kết nối tới
-                return i;                         // số đội
-            }
+{   // lỗi chia đội ?
+    // int i = 0, j = 0, flag = 0; // flag : đánh dấu có tìm được team hay ko ?
+    // for (i = 0; i < AMOUNT_OF_TEAM; i++)
+    // {
+    //     for (j = 0; j < AMOUNT_OF_PEOPLE_A_TEAM; j++)
+    //     {
+    //         if (team[i].socket_addr[j] == 0)
+    //         { // nếu trong team có địa chỉ vẫn là 0 thì là còn chỗ trống
+    //             flag = 1;
+    //             team[i].socket_addr[j] = connfdf; // chia đội cho địa chỉ connfd kết nối tới
+    //             return i;                         // số đội
+    //         }
+    //     }
+    // }
+    // return -1; // số đội đầy
+    int i=0; // chuyển sang chế độ chơi lẻ
+    for (i=0;i<AMOUNT_OF_TEAM;i++)
+        if (team[i].socket_addr[0] ==0) {
+            team[i].socket_addr[0] = connfdf;
+            return i;
         }
-    }
-    return -1; // số đội đầy
+    return -1;    
 }
 // Kiểm tra xem người này thuộc team nào
 int getTeamNumber(int connfd)

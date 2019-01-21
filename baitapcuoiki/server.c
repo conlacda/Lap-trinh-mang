@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
 	getUserInfo(f);
 	loadQuestion();
 	initTeam();
+	initWeaponItem();
 	//Step 4: Communicate with clients
 	while (1)
 	{
@@ -134,8 +135,9 @@ int main(int argc, char *argv[])
 			{
 				// printf("%d",connfd);  phân biêt 2 client với số connfd sinh ra
 				printf("You got a connection from %s with connfd= %d\n", inet_ntoa(cliaddr.sin_addr), connfd); /* prints client's IP */
-				if (splitTeam(connfd) != -1)																   // nếu ko xếp đc đội thì đóng kết nối đó
+				if (splitTeam(connfd) != -1) // nếu team chưa đầy																   // nếu ko xếp đc đội thì đóng kết nối đó
 				{
+					printf("Thuoc team : %d\n",getTeamNumber(connfd));
 					state = 0;
 					for (i = 0; i < FD_SETSIZE; i++)
 						if (client[i] < 0)
@@ -167,9 +169,9 @@ int main(int argc, char *argv[])
 					if (--nready <= 0)
 						continue; /* no more readable descriptors */
 				}
-				else
+				else // team đầy
 				{
-					sendData(connfd, "400", 4, 0);
+					sendData(connfd, "400", 4, 0); 
 					close(connfd);
 				}
 			}
@@ -191,12 +193,12 @@ int main(int argc, char *argv[])
 				}
 				else
 				{
-					// printf("%ld %d\n",strlen(rcvBuff),sockfd);
-
 					processData(sockfd,rcvBuff, sendBuff, errorCode);
-					if (!strcmp(sendBuff,"220") || !strcmp(sendBuff,"221") || !strcmp(sendBuff,"222") || !strcmp(sendBuff,"223") )
+					if (!strcmp(sendBuff,"220") || !strcmp(sendBuff,"221") || !strcmp(sendBuff,"222") || !strcmp(sendBuff,"223") ||
+					!strcmp(errorCode,"210") || !strcmp(errorCode,"1"))
 					    sendData(sockfd, sendBuff, strlen(sendBuff), 0);
 					else sendData(sockfd,errorCode,strlen(errorCode),0);
+					strcpy(sendBuff,""); strcpy(errorCode,""); //
 					// 0 : flag cờ báo  ret kích thước mảng
 					if (ret <= 0)
 					{ // bao loi
@@ -336,8 +338,8 @@ void attackCastle(int i, int castle_number, char errorCode[]) {
 	}
 	if (array_weapon[team[i].weapon].weapon_strong >= defend_strong) {
 		strcpy(errorCode, "230");
-		team[k].owned_castle[castle_number] = 0;
-		team[i].owned_castle[castle_number] = 1;
+		team[k].owned_castle[castle_number] = 0; // k : team bị chiếm
+		// team[i].owned_castle[castle_number] = 1; // i : team đi chiếm
 	}
 	else {
 		strcpy(errorCode, "231");
@@ -372,7 +374,13 @@ void getCastleInfo(char castle_info[]) {
 	char temp[MAX_LEN] = "";
 	for (j = 0; j < 3; j++) {
 		int check = 0;
-		strcat(castle_info, "Castle 0: \n");
+
+        strcat(castle_info, "Castle ");
+        sprintf(temp, "%d", j);
+        strcat(castle_info, temp);
+        strcat(castle_info, ": \n");
+
+		
 		for (k = 0; k < AMOUNT_OF_TEAM; k++) {
 			if (team[k].owned_castle[j] == 1) {
 				check = 1;
@@ -479,6 +487,8 @@ void processData(int sockfd,char in[], char out[],char errorCode[])
 			strcpy(errorCode, "210");
 		}
 		
+		else strcpy(errorCode,"404");
+		
 	} else
     if (strcmp(getCommandCode(in),"SHOWQT") == 0){
         i = atoi(getParameter1(in))-7;
@@ -502,6 +512,7 @@ void processData(int sockfd,char in[], char out[],char errorCode[])
 			strcpy(temp,strcat(big_question[i].answer4,"/"));
 			strcpy(out,strcat(out,temp));
 		}
+		strcpy(errorCode,"1");
 	}
 	else
 	if (strcmp(getCommandCode(in),"ANSRESOURCE")==0){ // sovle answer question for resouces
@@ -520,15 +531,46 @@ void processData(int sockfd,char in[], char out[],char errorCode[])
 		    	if (strcmp(param2,"d")==0) j=4; 
 			    if (small_question_true_answer[i] == j) {
 			    	strcpy(out,"220");
-			    	team[getTeamNumber(sockfd)].owned_resource[i] = 1; // team x có người sockfd sở hữu bãi i 
+			    	team[getTeamNumber(sockfd)].owned_resource[i] = 1; 
 		    	} else strcpy(out,"221");
 		    }
 		}	
+	} 
+    else 
+	if (strcmp(getCommandCode(in),"ANSCASTLE") == 0){ 
+        strcpy(param1,getParameter1(in));
+		strcpy(param2,getParameter2(in));
+		int i1 = atoi(param1)-7;
+    	strcpy(out,param2);
+        int v;
+		
+		if (param2[0] != 'a' && param2[0] != 'b' && param2[0] != 'c' && param2[0] != 'd') strcpy(errorCode,"404"); else{	
+	    	if (strlen(param2)>1) strcpy(out,"221"); else
+	    	if (team[getTeamNumber(sockfd)].owned_resource[i1]==1) strcpy(out,"222");
+	    	else
+	    	{
+                if (strcmp(param2,"a")==0) j=1; 
+	    		if (strcmp(param2,"b")==0) j=2; 
+	    		if (strcmp(param2,"c")==0) j=3; 
+		    	if (strcmp(param2,"d")==0) j=4; 
+			    if (big_question_true_answer[i1] == j) {
+			     
+		            for ( v=0;v<3;v++){ // for (int v=0;v<AMOUNT_OF_TEAM;v++)
+					    if (team[v].owned_castle[i1] == 1 ) strcpy(errorCode,"235");
+					}
+					if (!strcmp(errorCode,"235")) { }else {
+						strcpy(out,"220");
+			    	    team[getTeamNumber(sockfd)].owned_castle[i1] = 1; 
+					} 
+		    	} else strcpy(out,"221");
+		    }
+		} 
 	}
-	// if (strcmp(getCommandCode(in),"ANSCASTLE") == 0)
-	  else strcpy(out,in);
+	  else { // ko xử lý đc đều trả về 404 
+		  strcpy(out,"404");
+		  strcpy(errorCode,"404");
+	  }
 	// tách xâu xem tín hiệu gửi về 
-	
 }
 int splitString(char recv[])
 { //1

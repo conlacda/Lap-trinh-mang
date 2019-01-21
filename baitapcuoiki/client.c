@@ -139,7 +139,18 @@ int main(int argc, char *argv[])
 			else if (!strcmp(buff,"241")) printf("Not enough resource");
 			else if (!strcmp(buff,"240")) printf("Buy weapon successfully"); 
 			else if (!strcmp(buff,"242")) printf("Weapon is not fount");
-			printf("%s",buff);
+			else if (!strcmp(buff,"404")) printf("Parameter is not true");
+			else if (!strcmp(buff,"310")) printf("Buy the item successfully");
+			else if (!strcmp(buff,"311")) printf("Not enough resource");
+			else if (!strcmp(buff,"312")) printf("Not owned this castle");
+			else if (!strcmp(buff,"313")) printf("Not found item / castle");
+			else if (!strcmp(buff,"235")) printf("Castle is own by a team");
+			else if (!strcmp(buff,"230")) printf("Attack successfully");
+			else if (!strcmp(buff,"231")) printf("Lose . You can destroy defense of this castle");
+			else if (!strcmp(buff,"232")) printf("This castle is owned ");
+			else if (!strcmp(buff,"233")) printf("Castle is not found");
+			else if (!strcmp(buff,"234")) printf("This castle has no owner . Answer the question to get castle");
+			else printf("%s",buff);
 		}
 		// printf("%s",buff);
 	}

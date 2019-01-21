@@ -11,3 +11,21 @@ số câu hỏi sẽ được -1 khi gửi đi đến serve  (client 1-18  serve
 
 solveString.c : lỗi hàm lấy tham số thứ 2 khi thông điệp gửi chỉ có 1 lệnh + 1 tham số
 --> ANSRESOURCE ko gửi 1 tham số ( core dumped server)
+
+đã fix chia team
+fix tra loi cau hoi co nguoi khac chiem
+
+230 - tan cong chua dc giai ma 
+team chiem cung chua dc thay doi
+
+Kịch bản : 2 người vào 
+--> ANSCASTLE 7 c : chiếm đc lâu đài  (A)
+    ANSCASTLE 7 c --> (B) -- 235
+    BUYDEF 0 1 (A)
+    ATTACK 0 (B)
+    BUYATT 1 (B)
+    ATTACK 0 (B) : phá thành công
+    ATTACK 0 (B) : không có người sở hữu 234
+    ANSCASTLE 7 c (B) : chiếm đc thành
+// BUYATT 1 : mua vũ khi
+// ATTACK 0 : tấn công
