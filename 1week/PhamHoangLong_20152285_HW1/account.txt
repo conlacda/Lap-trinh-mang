@@ -1,3 +1,0 @@
-long 1 1
-lg s 1
-fs sdf 1 
